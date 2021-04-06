@@ -1,2 +1,1 @@
-# dqn-mario
-Using Deep Q Learning to play Mario
+# Mario Playing Agent using Deep Q Learning
