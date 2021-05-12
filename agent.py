@@ -10,13 +10,13 @@ from replay_memory import ReplayMemory
 
 # Hyperparameters
 REPLAY_CAPACITY = 25000
-BATCH_SIZE = 16
+BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10000
-BURNIN = 5000
+BURNIN = 1280
 # USE_CUDA = torch.cuda.is_available()
 USE_CUDA = False
 
@@ -30,12 +30,10 @@ class MarioAgent:
         self.step = 0
         self.eps_threshold = EPS_START
         self.onlineNet = DQN(n_inputs, n_actions).float()
+        self.targetNet = DQN(n_inputs, n_actions).float()
         if USE_CUDA: 
             self.onlineNet = self.onlineNet.to(device='cuda')
-        if self.net_type == 'ddqn':
-            self.targetNet = DQN(n_inputs, n_actions).float()
-            if USE_CUDA: 
-                self.targetNet = self.targetNet.to(device='cuda')
+            self.targetNet = self.targetNet.to(device='cuda')
         
         self.optimizer = optim.Adam(self.onlineNet.parameters(), lr=lr)
         self.loss_fn = nn.MSELoss()
@@ -74,9 +72,10 @@ class MarioAgent:
 
         with torch.no_grad():
             Q_next = self.onlineNet(next_state)
+            Q_next = torch.argmax(Q_next, axis=1)
 
             if self.net_type == 'ddqn':
-                Q_next = self.targetNet(next_state)[np.arange(0, BATCH_SIZE), torch.argmax(Q_next, axis=1)]
+                Q_next = self.targetNet(next_state)[np.arange(0, BATCH_SIZE), Q_next]
         
             Q_target = (reward + (1 - done.float()) * GAMMA * Q_next).float()
 

@@ -23,13 +23,13 @@ def train(n_episodes, render=False, lr=0.02, net_type='dqn', checkpoint=None, ou
     # -------------------------------------------------------------------------------------------- #
     # Environment Setup
     # -------------------------------------------------------------------------------------------- #
-    env = gym_super_mario_bros.make('SuperMarioBros-1-1-v3')
+    env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
 
     # Simple Movement
-    # env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    env = JoypadSpace(env, SIMPLE_MOVEMENT)
 
     # Right and Jump Right
-    env = JoypadSpace(env, [ ['right'], ['right', 'A'] ])
+    # env = JoypadSpace(env, [ ['right'], ['right', 'A'] ])
 
     env = apply_wrappers(env)
     env.reset()
@@ -70,8 +70,8 @@ def train(n_episodes, render=False, lr=0.02, net_type='dqn', checkpoint=None, ou
     # -------------------------------------------------------------------------------------------- #
     # Save Model
     # -------------------------------------------------------------------------------------------- #
-    mario_agent.save(out_dir + '/model.dat')
+    mario_agent.save(out_dir / f"/model.dat")
 
 if __name__ == '__main__':
     out_dir = Path('results') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-    train(10, render=True, out_dir=out_dir)
+    train(100, render=False, out_dir=out_dir)

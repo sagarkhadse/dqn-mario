@@ -18,7 +18,6 @@ class ReplayMemory(object):
         self.memory.append((state, next_state, action, reward, done,))
 
     def sample(self, batch_size):
-        print(len(self.memory), batch_size)
         batch = random.sample(self.memory, batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
