@@ -17,8 +17,8 @@ EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10000
 BURNIN = 1280
-# USE_CUDA = torch.cuda.is_available()
-USE_CUDA = False
+USE_CUDA = torch.cuda.is_available()
+# USE_CUDA = False
 
 class MarioAgent:
     def __init__(self, n_inputs, n_actions, lr=0.02, net_type='dqn'):
