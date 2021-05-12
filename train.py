@@ -2,12 +2,13 @@ import datetime
 from pathlib import Path
 
 import gym
-from gym.gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
+from gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 
 from agent import MarioAgent
+from metrics import MetricLogger
 from wrappers import ResizeObservation, SkipFrame
 
 def apply_wrappers(env):
@@ -40,7 +41,7 @@ def train(n_episodes, render=False, lr=0.02, net_type='dqn', checkpoint=None, ou
     # Init
     # -------------------------------------------------------------------------------------------- #
     out_dir.mkdir(parents=True)
-    logger = MetricLogger(save_dir)
+    logger = MetricLogger(out_dir)
 
     mario_agent = MarioAgent(n_inputs, n_actions, lr=lr, net_type=net_type)
     
@@ -51,10 +52,11 @@ def train(n_episodes, render=False, lr=0.02, net_type='dqn', checkpoint=None, ou
 
         state = env.reset()
         while True:
-            # env.render()
+            if render:
+                env.render()
             action = mario_agent.select_action(state)
             next_state, reward, done, info = env.step(action)
-            q, loss = mario_agent.learn(state, next_state, action, reward, don)
+            q, loss = mario_agent.learn(state, next_state, action, reward, done)
             logger.log_step(reward, loss, q)
             state = next_state
 
@@ -63,7 +65,12 @@ def train(n_episodes, render=False, lr=0.02, net_type='dqn', checkpoint=None, ou
         logger.log_episode()
 
         if e % 20 == 0:
-            logger.record(episode=e, step=mario_agent.step)
+            logger.record(episode=e, step=mario_agent.step, epsilon=mario_agent.eps_threshold)
+    
+    # -------------------------------------------------------------------------------------------- #
+    # Save Model
+    # -------------------------------------------------------------------------------------------- #
+    mario_agent.save(out_dir + '/model.dat')
 
 if __name__ == '__main__':
     out_dir = Path('results') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')

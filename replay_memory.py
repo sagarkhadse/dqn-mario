@@ -6,8 +6,7 @@ from collections import deque
 class ReplayMemory(object):
 
     def __init__(self, capacity, use_cuda = False):
-        self.memory = deque(capacity)
-        self.position = 0
+        self.memory = deque(maxlen=capacity)
         self.use_cuda = use_cuda
 
     def push(self, state, next_state, action, reward, done):
@@ -19,6 +18,7 @@ class ReplayMemory(object):
         self.memory.append((state, next_state, action, reward, done,))
 
     def sample(self, batch_size):
+        print(len(self.memory), batch_size)
         batch = random.sample(self.memory, batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
