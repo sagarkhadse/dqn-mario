@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------------------------------ #
+# agent.py - Mario Agent that uses DDQN/DQN to train on a super mario bros environment
+# ------------------------------------------------------------------------------------------------ #
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -10,15 +13,14 @@ from replay_memory import ReplayMemory
 
 # Hyperparameters
 REPLAY_CAPACITY = 25000
-BATCH_SIZE = 128
-GAMMA = 0.999
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
+BATCH_SIZE = 16
+GAMMA = 0.9
+EPS_START = 1
+EPS_END = 0.1
+EPS_DECAY = 0.9999975
 TARGET_UPDATE = 10000
 BURNIN = 1280
 USE_CUDA = torch.cuda.is_available()
-# USE_CUDA = False
 
 class MarioAgent:
     def __init__(self, n_inputs, n_actions, lr=0.02, net_type='dqn'):
@@ -39,12 +41,20 @@ class MarioAgent:
         self.loss_fn = nn.MSELoss()
 
     def select_action(self, state):
-        
+        """Select the best action
+
+        Args:
+            state: current state
+
+        Returns:
+            action: best action
+        """
         sample = np.random.rand()
-        eps_threshold = EPS_END + (EPS_START - EPS_END) * math.exp(-1. * self.step / EPS_DECAY)
+        self.eps_threshold *= EPS_DECAY
+        self.eps_threshold = max(EPS_END, self.eps_threshold)
         self.step += 1
 
-        if sample > eps_threshold:
+        if sample > self.eps_threshold:
             state = torch.FloatTensor(state).cuda() if USE_CUDA else torch.FloatTensor(state)
             state = state.unsqueeze(0)
             action_values = self.onlineNet(state)
@@ -55,7 +65,18 @@ class MarioAgent:
         return action_idx
 
     def learn(self, state, next_state, action, reward, done):
+        """Learn based on the given parameters
 
+        Args:
+            state: Current state
+            next_state: Next state
+            action: Action selected
+            reward: Reward for the state and action
+            done: Completion function
+
+        Returns:
+            q, loss: q value, loss value
+        """
         # Push to replay memory
         self.replay_memory.push(state, next_state, action, reward, done)
 
@@ -87,18 +108,33 @@ class MarioAgent:
         return Q.mean().item(), loss.item()
 
     def save(self, filepath):
+        """Saves the model
+
+        Args:
+            filepath (string): file path to store the model in
+        """
         torch.save(dict(online=self.onlineNet.state_dict(), 
                         target=self.targetNet.state_dict(),
-                        step=self.step),
+                        step=self.step,
+                        epsilon=self.eps_threshold),
                     filepath)
         print(f"Model saved to {filepath}.")
 
     def load(self, filepath):
+        """Load a model from a file
+
+        Args:
+            filepath (string ): file path to load the model from
+
+        Raises:
+            ValueError: error if file not found
+        """
         if not filepath.exists():
             raise ValueError(f"{filepath} does not exist")
 
         ckp = torch.load(filepath, map_location=('cuda' if USE_CUDA else 'cpu'))
         self.step = ckp.get('step')
+        self.eps_threshold = ckp.get('epsilon')
         self.onlineNet.load_state_dict(ckp.get('online'))
         self.targetNet.load_state_dict(ckp.get('target'))
 

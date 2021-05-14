@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------------------------------ #
+# wrappers.py - Wrappers for the preprocessing of the openAI gym environment.
+# ------------------------------------------------------------------------------------------------ #
 import gym
 import torch
 import random, datetime, numpy as np
@@ -6,6 +9,11 @@ from skimage import transform
 from gym.spaces import Box
 
 class ResizeObservation(gym.ObservationWrapper):
+    """Resizes the frames
+
+    Args:
+        gym (env): openAI gym environment
+    """
     def __init__(self, env, shape):
         super().__init__(env)
         if isinstance(shape, int):
@@ -25,6 +33,11 @@ class ResizeObservation(gym.ObservationWrapper):
 
 
 class SkipFrame(gym.Wrapper):
+    """Skips frames and calculates cumulative frames
+
+    Args:
+        gym (env): openAI gym environment
+    """
     def __init__(self, env, skip):
         """Return only every `skip`-th frame"""
         super().__init__(env)
