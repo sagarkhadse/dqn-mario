@@ -1,3 +1,7 @@
+# ------------------------------------------------------------------------------------------------ #
+# metrics.py - Calculates meterics for logging and visualization
+#              source: https://pytorch.org/tutorials/intermediate/mario_rl_tutorial.html 
+# ------------------------------------------------------------------------------------------------ #
 import numpy as np
 import time, datetime
 import matplotlib.pyplot as plt
